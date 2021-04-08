@@ -1,0 +1,41 @@
+{
+    "name": "Repeat Survey Link",
+
+    "namespace": "STPH\\repeatSurveyLink", 
+
+    "description": "Access to the next instance of a repeating instrument's survey from any other instrument/form/survey.",
+
+    "documentation": "README.md",
+
+    "authors": [
+        {
+             "name": "Ekin Tertemiz",
+             "email": "ekin.tertemiz@swisstph.ch",
+             "institution": "Swiss Tropical and Public Health Institute (STPH)"
+         }
+     ],
+
+    "framework-version": 6,
+
+    "permissions": [
+        "redcap_module_save_configuration",
+        "redcap_save_record"
+    ],
+
+    "enable-every-page-hooks-on-system-pages": false,
+
+    "links":{},
+
+    "no-auth-pages": [],
+
+    "system-settings": [],
+
+    "project-settings": [],
+
+    "crons": [],
+
+    "compatibility": {
+        "php-version-min": "7.2.0",
+        "redcap-version-min": "10.0.0"
+    }
+ }
