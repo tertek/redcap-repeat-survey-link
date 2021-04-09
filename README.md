@@ -1,6 +1,8 @@
 # Repeat Survey Link
 Access to the next instance of a repeating instrument's survey from any other instrument/form/survey.
 
+**This module is only working with the first event id. A full multiple event functionality is not implemented.**
+
 ## Description
 This module adds the possibility to define a "Repeat Survey Link" that can be accessed from anywhere. Currently, the REDCap Smart Variable `[next-instance]` does only work within the same instrument context and therefore cannot be used to generate a survey link from another instrument for its next instance.
 

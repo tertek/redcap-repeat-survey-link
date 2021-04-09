@@ -18,6 +18,7 @@
     "framework-version": 6,
 
     "permissions": [
+        "redcap_every_page_top",
         "redcap_module_save_configuration",
         "redcap_save_record"
     ],
@@ -30,12 +31,40 @@
 
     "system-settings": [],
 
-    "project-settings": [],
+    "project-settings": [
+        {
+            "key": "descriptive-text",
+            "name": "<b>In the following you can define a \"Repeat Survey Link\"<b>. <br>Please choose an instrument that is repeating and a helper variable that is text and readonly.",
+            "type": "descriptive"
+        },
+        {
+            "key": "repeat-survey-links",
+            "name": "Repeat Survey Link",
+            "type": "sub_settings",
+            "repeatable": true,
+            "sub_settings": [
+                {
+                    "key": "instrument-name",
+                    "name": "Instrument name (repeating)",
+                    "required": true,
+                    "type": "form-list"
+                },
+                {
+                    "key": "helper-variable",
+                    "name": "Helper Variable (text, readonly)",
+                    "required": true,
+                    "type": "field-list",
+                    "field-type": "text",
+                    "repeatable": false
+                }
+            ]
+        }
+    ],
 
     "crons": [],
 
     "compatibility": {
-        "php-version-min": "7.2.0",
-        "redcap-version-min": "10.0.0"
+        "php-version-min": "5.4.0",
+        "redcap-version-min": "10.2.0"
     }
  }
