@@ -34,3 +34,4 @@ You should create the "helper variable" within a non-repeating instrument as a t
 Version | Description
 ------- | --------------------
 v1.0.0  | Initial release.
+v1.0.1  | DB security enhancement.

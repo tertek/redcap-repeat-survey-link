@@ -186,15 +186,15 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
         if( count($this->inserts) > 0 ) {
             $INSERT_VALUES = implode(",", array_map(function($entry){
                 return "(" . 
-                        $entry["project_id"] . ", " 
-                        . $entry["event_id"] . ", " 
-                        . $entry["record_id"] . ", '" 
-                        . $entry["field_name"] . "', '" 
-                        . $entry["repeat_survey_link"] . 
+                db_escape($entry["project_id"]) . ", " 
+                        . db_escape($entry["event_id"]) . ", " 
+                        . db_escape($entry["record_id"]) . ", '" 
+                        . db_escape($entry["field_name"]) . "', '" 
+                        . db_escape($entry["repeat_survey_link"]) . 
                         "')";
             }, $this->inserts));
     
-            $sql_insert = "INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES $INSERT_VALUES";
+            $sql_insert = 'INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES ' . $INSERT_VALUES;
     
             //  Execute the query                                                  
             $this->query( $sql_insert, [] );
@@ -208,11 +208,11 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
             foreach ($this->updates as $key => $entry) {
                 
                 $JOIN_VALUES .= "SELECT " . 
-                                $entry["project_id"] . " AS project_id, " . 
-                                $entry["event_id"] . " AS event_id,  " . 
-                                $entry["record_id"] . " AS record, '" . 
-                                $entry["field_name"] . "' AS field_name, '" . 
-                                $entry["repeat_survey_link"] . "' AS new_value ";
+                db_escape($entry["project_id"]) . " AS project_id, " . 
+                db_escape($entry["event_id"]) . " AS event_id,  " . 
+                db_escape($entry["record_id"]) . " AS record, '" . 
+                db_escape($entry["field_name"]) . "' AS field_name, '" . 
+                db_escape($entry["repeat_survey_link"]) . "' AS new_value ";
                 
                 if( $key < count($this->updates) -1) {
                     //  Omit on last entry
