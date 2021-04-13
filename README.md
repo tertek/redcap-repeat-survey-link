@@ -35,3 +35,4 @@ Version | Description
 ------- | --------------------
 v1.0.0  | Initial release.
 v1.0.1  | DB security enhancement.
+v1.0.2  | Use parametrized queries.
