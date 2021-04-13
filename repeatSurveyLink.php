@@ -85,7 +85,7 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     }
 
     private function setParams($project_id, $event_id, $record_id) {
-        
+                
         //  Set project_id
         $this->project_id = $project_id;
 
@@ -96,8 +96,12 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
             $this->event_id = $event_id;
         }
 
-        //  Set record id
+        //  Set record id from function or parameter depending on call context, leave null if not intended to specify
         $this->record_id = $record_id;
+        if( $record_id == null && isset($_GET["id"]) ) {
+            $this->record_id = $_GET["id"];
+        }
+
     }
 
     #  Set definitions by validation of settings
@@ -131,7 +135,8 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
             array("record_id"), 
             array_column($this->definitions, 'helper-variable')
         );
-        $this->records = REDCap::getData('array', null, $fields , null, null, true);        
+        //  Fetch specific record by id  or all of them if record_id == null
+        $this->records = REDCap::getData('array',  $this->record_id, $fields , null, null, true);
     }
 
     private function setInsertsAndUpdates() {
@@ -146,7 +151,7 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     
                 //  Get field value
                 $value = $values[$this->event_id][$field_name];
-    
+   
                 # Taken from redcap_v10.9.1\Classes\Survey.php:displaySurveyQueueForRecord():492
                 list ($instanceTotal, $instanceMax) = RepeatInstance::getRepeatFormInstanceMaxCount($record, $this->event_id, $form_name, $Proj);
                 $repeatSurveyLink = REDCap::getSurveyLink($record, $form_name, $this->event_id, $instanceMax + 1);
@@ -184,54 +189,61 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
 
     private function queryInserts() {
         if( count($this->inserts) > 0 ) {
-            $INSERT_VALUES = implode(",", array_map(function($entry){
-                return "(" . 
-                db_escape($entry["project_id"]) . ", " 
-                        . db_escape($entry["event_id"]) . ", " 
-                        . db_escape($entry["record_id"]) . ", '" 
-                        . db_escape($entry["field_name"]) . "', '" 
-                        . db_escape($entry["repeat_survey_link"]) . 
-                        "')";
-            }, $this->inserts));
-    
-            $sql_insert = 'INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES ' . $INSERT_VALUES;
-    
-            //  Execute the query                                                  
-            $this->query( $sql_insert, [] );
-            //  add logs
 
+            $query = $this->createQuery();
+            $query->add("INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES");
+
+            foreach ($this->inserts as $key => $entry) {
+                if($key != 0) {
+                    $query->add(", ");
+                }
+                $query->add("(?, ?, ?, ?, ? )", [
+                    $entry["project_id"], 
+                    $entry["event_id"], 
+                    $entry["record_id"], 
+                    $entry["field_name"], 
+                    $entry["repeat_survey_link"]
+                ]);
+            }
+            $result = $query->execute();
         }
     }
 
     private function queryUpdates() {
         if( count($this->updates) > 0 ) {
+
+            $query = $this->createQuery();
+            $query->add("UPDATE redcap_data rd JOIN");
+
+            $last = count($this->updates) -1;
             foreach ($this->updates as $key => $entry) {
+                if($key == 0) {
+                    $query->add("(");
+                }
+                $query->add(
+                    "SELECT ? AS project_id, ? AS event_id, ? AS record, ? AS field_name, ? AS new_value",
+                    [
+                        $entry["project_id"],
+                        $entry["event_id"],
+                        $entry["record_id"],
+                        $entry["field_name"],
+                        $entry["repeat_survey_link"]
+                    ]);
                 
-                $JOIN_VALUES .= "SELECT " . 
-                db_escape($entry["project_id"]) . " AS project_id, " . 
-                db_escape($entry["event_id"]) . " AS event_id,  " . 
-                db_escape($entry["record_id"]) . " AS record, '" . 
-                db_escape($entry["field_name"]) . "' AS field_name, '" . 
-                db_escape($entry["repeat_survey_link"]) . "' AS new_value ";
-                
-                if( $key < count($this->updates) -1) {
-                    //  Omit on last entry
-                    $JOIN_VALUES .= "UNION ALL ";
-                }                    
+                if($key == $last) {
+                    $query->add(")");
+                } else {
+                    $query->add("UNION ALL");                                                            
+                }
             }
-    
-            $JOIN_STATEMENT = "JOIN( ";
-            $JOIN_STATEMENT .= $JOIN_VALUES;
-            $JOIN_STATEMENT .= " ) ";
-            $sql_update = "UPDATE redcap_data rd " .
-                            $JOIN_STATEMENT .
-                            "vals ON rd.project_id = vals.project_id " . 
-                            "AND rd.event_id = vals.event_id AND rd.record = vals.record AND rd.field_name = vals.field_name " .
-                            "SET value = new_value ";
-            
-            //  Execute the query                                                  
-            $this->query( $sql_update, [] );
-            //  add logs
+
+            $query->add("vals ON rd.project_id = vals.project_id");
+            $query->add("AND rd.event_id = vals.event_id AND rd.record = vals.record AND rd.field_name = vals.field_name");
+            $query->add("SET value = new_value");
+            $result = $query->execute();
+
+           //  add logs
+
         }
     }    
 }
