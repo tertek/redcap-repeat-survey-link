@@ -22,8 +22,20 @@ After enabling the module for a project go to module configuration and add a "Re
 
 Repeat this process for any other repeating instrument by adding a new "Repeat Survey Link".
 
-Notice:
-You should create the "helper variable" within a non-repeating instrument as a text field with @readonly so that usage errors/problems can be omitted.
+**Necessary Requirements/Limitations**
+
+Helper Variable:
+The helper variable should be create before module configuration with the following characterstics:
+- The helper variable should in a field inside a non-repeating instrument.
+- The helper variable should be of type text.
+- The helper variable should have a @READONLY Action Tag.
+- Name the helper variable in a way that its association to the repeating instrument and the module is clear, e.g.:
+    helper_rsl_instrumentName
+
+Requirements/Limitations:
+Projects with multiple arms have not been tested. It is recommended to use this module only in projects with a single arm.
+Repeating events are not supported for the repeating instrument in case.
+
 
 ## Roadmap
 - handle module disable (delete generated links?)
@@ -36,3 +48,4 @@ Version | Description
 v1.0.0  | Initial release.
 v1.0.1  | DB security enhancement.
 v1.0.2  | Use parametrized queries.
+v1.0.3  | Minor Fix.

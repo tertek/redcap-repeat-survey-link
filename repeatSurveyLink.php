@@ -21,6 +21,7 @@ if (!function_exists('array_key_first')) {
 // Declare your module class, which must extend AbstractExternalModule 
 class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
 
+    private $arm_id;
     private $project_id;
     private $event_id;
     private $record_id;
@@ -36,7 +37,7 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     */
     public function __construct()
     {        
-        parent::__construct();
+       parent::__construct();
        // Other code to run when object is instantiated
     }
 
@@ -45,9 +46,7 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     *
     */
     public function redcap_every_page_top($project_id) {
-        
         //$this->init_rsl($project_id);
-
     }
 
 
@@ -67,7 +66,10 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     */    
     public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
 
-        $this->init_rsl($project_id, $event_id,  $record);
+        //  Only trigger on form/survey pages of defined repeating instruments (before validation)
+        if( in_array($instrument, array_column($this->getSubSettings("repeat-survey-links"), 'instrument-name')) ) {
+            $this->init_rsl($project_id, $event_id,  $record);
+        }
 
     }        
 
@@ -76,7 +78,6 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     *
     */      
     public function init_rsl($project_id, $event_id=null, $record_id = null) {
-
         $this->setParams($project_id, $event_id, $record_id);
         $this->setDefinitions();
         $this->setRecords();
@@ -85,15 +86,15 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     }
 
     private function setParams($project_id, $event_id, $record_id) {
-                
-        //  Set project_id
-        $this->project_id = $project_id;
 
-        //  Set event id
-        if($event_id == null) {
-            $this->event_id = getSingleEvent($project_id);
-        } else {
+        //  Set project_id
+        $this->project_id = $project_id;        
+
+        //  Set event id if not null
+        if($event_id != null) {      
             $this->event_id = $event_id;
+        } else {
+            $this->event_id = getSingleEvent($this->project_id);
         }
 
         //  Set record id from function or parameter depending on call context, leave null if not intended to specify
@@ -108,25 +109,24 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     private function setDefinitions() {        
 
         foreach ( $this->getSubSettings("repeat-survey-links") as $def ) {
-            $field_name = $def["helper-variable"];
-            $form_name  = $def["instrument-name"];
 
+            //  Validation
             //  Check if settings have been set
-            if(empty($field_name) || empty($form_name)) {
+            if(empty($def["helper-variable"]) || empty($def["instrument-name"])) {
                 break;
             }
             //  Check if instrument is of type repeating (REDCap v9.7.6+)
-            if( !in_array( $form_name, $this->framework->getRepeatingForms($event_id, $project_id) ) ) {
+            if( !in_array( $def["instrument-name"], $this->framework->getRepeatingForms($this->event_id, $this->project_id) ) ) {
                 break;
             }
+
             //  Check if field is of type text (REDCap v10.8.2+)
             /* if( $field->getType() != 'text') {
                 break;
             } */
 
             $this->definitions[] = $def;
-        }
-
+        }        
     }
 
     #   Fetch records only once with all field data combined, not everytime
