@@ -28,8 +28,12 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
 
     private $definitions;
     private $records;
-    private $inserts;
-    private $updates;
+    private $inserts = array();
+    private $updates = array();
+
+    const DB_LIMIT = 65000;
+    //  DB Placeholder limit per prepared query is 65,536. But we want to go sure..
+    const FIELDS_PER_QUERY = 5;
   
    /**
     * Constructs the class
@@ -188,60 +192,72 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     }
 
     private function queryInserts() {
-        if( count($this->inserts) > 0 ) {
+        if( count($this->inserts) > 0  && !empty($this->inserts) ) {
 
-            $query = $this->createQuery();
-            $query->add("INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES");
-
-            foreach ($this->inserts as $key => $entry) {
-                if($key != 0) {
-                    $query->add(", ");
+            //  Chunk into separate queries to stay below db placeholder limit
+            foreach (array_chunk($this->inserts, self::DB_LIMIT / self::FIELDS_PER_QUERY ) as $chunk)  
+            {
+                $query = $this->createQuery();
+                $query->add("INSERT INTO redcap_data (project_id, event_id, record, field_name, value) VALUES");
+    
+                foreach ( $chunk as $key => $entry) {
+                    if($key != 0) {
+                        $query->add(", ");
+                    }
+                    $query->add("(?, ?, ?, ?, ? )", [
+                        $entry["project_id"], 
+                        $entry["event_id"], 
+                        $entry["record_id"], 
+                        $entry["field_name"], 
+                        $entry["repeat_survey_link"]
+                    ]);
                 }
-                $query->add("(?, ?, ?, ?, ? )", [
-                    $entry["project_id"], 
-                    $entry["event_id"], 
-                    $entry["record_id"], 
-                    $entry["field_name"], 
-                    $entry["repeat_survey_link"]
-                ]);
+                $result = $query->execute();
+
             }
-            $result = $query->execute();
+
         }
     }
 
     private function queryUpdates() {
-        if( count($this->updates) > 0 ) {
+        if( count($this->updates) > 0 && !empty($this->updates) ) {
+            
+            //  Chunk into separate queries to stay below db placeholder limit
+            foreach (array_chunk($this->updates, self::DB_LIMIT / self::FIELDS_PER_QUERY ) as $chunk)  
+            {
+                               
+                $query = $this->createQuery();
+                $query->add("UPDATE redcap_data rd JOIN");
 
-            $query = $this->createQuery();
-            $query->add("UPDATE redcap_data rd JOIN");
+                $last = count( $chunk ) - 1;
 
-            $last = count($this->updates) -1;
-            foreach ($this->updates as $key => $entry) {
-                if($key == 0) {
-                    $query->add("(");
+                foreach ( $chunk as $key => $entry) {
+                    if($key == 0) {
+                        $query->add("(");
+                    }
+                    $query->add(
+                        "SELECT ? AS project_id, ? AS event_id, ? AS record, ? AS field_name, ? AS new_value",
+                        [
+                            $entry["project_id"],
+                            $entry["event_id"],
+                            $entry["record_id"],
+                            $entry["field_name"],
+                            $entry["repeat_survey_link"]
+                        ]);
+                    
+                    if($key == $last) {
+                        $query->add(")");
+                    } else {
+                        $query->add("UNION ALL");                                                            
+                    }
                 }
-                $query->add(
-                    "SELECT ? AS project_id, ? AS event_id, ? AS record, ? AS field_name, ? AS new_value",
-                    [
-                        $entry["project_id"],
-                        $entry["event_id"],
-                        $entry["record_id"],
-                        $entry["field_name"],
-                        $entry["repeat_survey_link"]
-                    ]);
-                
-                if($key == $last) {
-                    $query->add(")");
-                } else {
-                    $query->add("UNION ALL");                                                            
-                }
+    
+                $query->add("vals ON rd.project_id = vals.project_id");
+                $query->add("AND rd.event_id = vals.event_id AND rd.record = vals.record AND rd.field_name = vals.field_name");
+                $query->add("SET value = new_value");
+                $result = $query->execute();
+
             }
-
-            $query->add("vals ON rd.project_id = vals.project_id");
-            $query->add("AND rd.event_id = vals.event_id AND rd.record = vals.record AND rd.field_name = vals.field_name");
-            $query->add("SET value = new_value");
-            $result = $query->execute();
-
            //  add logs
 
         }
