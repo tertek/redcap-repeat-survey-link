@@ -58,9 +58,12 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
     * Hooks Repeat Survey Link module to redcap_module_save_configuration
     *
     */
-    public function redcap_module_save_configuration($project_id) {
+    public function redcap_module_save_configuration($project_id = null) {
 
-        $this->init_rsl($project_id);
+        //  Init RSL only if project id is not null
+        if( $project_id != null) {
+            $this->init_rsl($project_id);
+        }
 
     }
 
@@ -225,7 +228,7 @@ class repeatSurveyLink extends \ExternalModules\AbstractExternalModule {
             //  Chunk into separate queries to stay below db placeholder limit
             foreach (array_chunk($this->updates, self::DB_LIMIT / self::FIELDS_PER_QUERY ) as $chunk)  
             {
-                               
+
                 $query = $this->createQuery();
                 $query->add("UPDATE redcap_data rd JOIN");
 
