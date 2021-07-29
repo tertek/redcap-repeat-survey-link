@@ -14,27 +14,33 @@ Hooks beeing used are:
 ## Setup / Usage
 
 Install the module from REDCap module repository and enable over Control Center.
+Before configuring the module it is recommended to fullfil necessary requirements and limitations, as listed below.
 
 After enabling the module for a project go to module configuration and add a "Repeat Survey Link":
 - Define the repeating instrument that you would like to generate the survey link to its next instance
 - Select the "helper variable" that you would like to save the generated repeat-survey-link into
-- Save configuration
+- Save configuration (*This triggers a expensive query over all records, use wisely*)
 
 Repeat this process for any other repeating instrument by adding a new "Repeat Survey Link".
 
 **Necessary Requirements/Limitations**
 
-Helper Variable:
-The helper variable should be create before module configuration with the following characterstics:
-- The helper variable should in a field inside a non-repeating instrument.
-- The helper variable should be of type text.
-- The helper variable should have a @READONLY Action Tag.
-- Name the helper variable in a way that its association to the repeating instrument and the module is clear, e.g.:
-    helper_rsl_instrumentName
+Project:
+- Enabled: Use surveys in this project
+- Enabled: Repeatable instruments
+- Multiple Arms not supported: It is recommended to use this module only in projects with a single arm.
 
-Requirements/Limitations:
-Projects with multiple arms have not been tested. It is recommended to use this module only in projects with a single arm.
-Repeating events are not supported for the repeating instrument in case.
+Repeating Instrument:
+- Selected as Repeating Instrument within Project Setup (obviously)
+- Enabled as Survey within Designer
+
+
+Helper Variable:
+- should be a field of a **non-repeating instrument**.
+- should be of type text.
+- should have a @READONLY Action Tag.
+- should be named in a way that its association to the repeating instrument and the module is clear, e.g.:
+    helper_rsl_instrumentName
 
 
 ## Roadmap
