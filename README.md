@@ -34,7 +34,6 @@ Repeating Instrument:
 - Selected as Repeating Instrument within Project Setup (obviously)
 - Enabled as Survey within Designer
 
-
 Helper Variable:
 - should be a field of a **non-repeating instrument**.
 - should be of type text.
@@ -42,6 +41,8 @@ Helper Variable:
 - should be named in a way that its association to the repeating instrument and the module is clear, e.g.:
     helper_rsl_instrumentName
 
+Database:
+- DB Placeholder limit at least 65000.
 
 ## Roadmap
 - handle module disable (delete generated links?)
