@@ -45,7 +45,6 @@ Database:
 - DB Placeholder limit at least 65000.
 
 ## Roadmap
-- handle module disable (delete generated links?)
 - helper variable validation (type=text, readonly, etc?)
 
 ## Changelog
@@ -56,3 +55,4 @@ v1.0.0  | Initial release.
 v1.0.1  | DB security enhancement.
 v1.0.2  | Use parametrized queries.
 v1.0.3  | Minor Fix.
+v2.0.0  | Upgrade to module framework version 9.
